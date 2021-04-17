@@ -1,6 +1,6 @@
 # rvmyth
 Tools needed to simulate rvmyth
-1) iveriog
+1) iverilog
 2) gtkwave
 
 Steps to simulate rvmyth
