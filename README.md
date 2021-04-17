@@ -1,1 +1,1 @@
-# rv32i_myth
+# rvmyth32
