@@ -3,7 +3,7 @@ module tb_mythcore_test;
 	// Inputs
 	reg clk, reset;
 	// Outputs
-	wire [7:0] out;
+	wire [9:0] out;
 
         // Instantiate the Unit Under Test (UUT)
 	core uut (
