@@ -2,7 +2,7 @@
 `include "sp_verilog.vh" //_\SV
     // Included URL: "https://raw.githubusercontent.com/shivanishah269/risc-v-core/master/FPGA_Implementation/riscv_shell_lib.tlv"// Included URL: "https://raw.githubusercontent.com/stevehoover/warp-v_includes/2d6d36baa4d2bc62321f982f78c8fe1456641a43/risc-v_defs.tlv"
    
-   module core(input clk, input reset, output reg [7:0] out);
+   module core(input clk, input reset, output reg [9:0] out);
 `include "mythcore_test_gen.v"
 generate //_\TLV
 // /====================\
@@ -19,18 +19,19 @@ generate //_\TLV
    //  r14 (a4): Sum
    // 
    // External to function:
-   // Inst #0: ADD,r10,r0,r0             // Initialize r10 (a0) to 0.
-   // Function:
-   // Inst #1: ADD,r14,r10,r0            // Initialize sum register a4 with 0x0
-   // Inst #2: ADDI,r12,r10,1010         // Store count of 10 in register a2.
-   // Inst #3: ADD,r13,r10,r0            // Initialize intermediate sum register a3 with 0
+   // Inst #0: ADD,r14,r0,r0            // Initialize sum register a4 with 0x0
+   // Inst #1: ADDI,r12,r0,1010         // Store count of 10 in register a2.
+   // Inst #2: ADD,r13,r0,r0            // Initialize intermediate sum register a3 with 0
    // Loop:
-   // Inst #4: ADD,r14,r13,r14           // Incremental addition
-   // Inst #5: ADDI,r13,r13,1            // Increment intermediate register by 1
-   // Inst #6: BLT,r13,r12,1111111111000 // If a3 is less than a2, branch to label named <loop>
-   // Inst #7: ADD,r10,r14,r0            // Store final result to register a0 so that it can be read by main program
-   // Inst #8: SW,r0,r10,10000           // Store the value of r10 into address 17.
-   // Inst #9: LW,r17,r0,10000           // Load the value from 
+   // Inst #3: ADD,r14,r13,r14           // Incremental addition
+   // Inst #4: ADDI,r13,r13,1            // Increment intermediate register by 1
+   // Inst #5: BLT,r13,r12,1111111111000 // If a3 is less than a2, branch to label named <loop>   
+   // Inst #6: ADDI,r13,r13,111111111111            // Increment intermediate register by 1
+   // Inst #7: SUB,r14,r14,r13           // Incremental addition
+   // Inst #8: BLT,r0,r13,1111111111000           // Load the value from 
+   // Inst #9: ADD,r0,r0,r0
+   // Inst #10: ADD,r0,r0,r0
+   // Inst #11: BLT,r0,r12,1111111010100 
    
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
@@ -42,7 +43,7 @@ generate //_\TLV
       
       //Fetch
          // Next PC
-         assign CPU_pc_a0[31:0] = (CPU_reset_a1) ? 1'b0 : 
+         assign CPU_pc_a0[31:0] = (CPU_reset_a1) ? 32'b0 : 
                      (CPU_taken_br_a3) ? CPU_br_tgt_pc_a3 : 
                      (CPU_valid_load_a3) ? CPU_inc_pc_a3 : 
                      (CPU_valid_jump_a3 && CPU_is_jal_a3) ? CPU_br_tgt_pc_a3 :
@@ -236,8 +237,8 @@ generate //_\TLV
    // Assert these to end simulation (before Makerchip cycle limit).
    /*SV_plus*/
       always @ (posedge clk) begin
-         if (CPU_Xreg_value_a5[17] == (1+2+3+4+5+6+7+8+9))
-            out = CPU_Xreg_value_a5[17];                
+         //if (CPU_Xreg_value_a5[17] ==? (1+2+3+4+5+6+7+8+9))
+            out = CPU_Xreg_value_a5[14];                
       end
    
    // Macro instantiations for:
@@ -246,31 +247,33 @@ generate //_\TLV
    //  o data memory
    //  o CPU visualization
    //_|cpu
-      //_\source /raw.githubusercontent.com/shivanishah269/riscvcore/master/FPGAImplementation/riscvshelllib.tlv 16   // Instantiated from mythcore_test.tlv, 248 as: m4+imem(@1)    // Args: (read stage)
+      //_\source /raw.githubusercontent.com/shivanishah269/riscvcore/master/FPGAImplementation/riscvshelllib.tlv 16   // Instantiated from mythcore_test.tlv, 249 as: m4+imem(@1)    // Args: (read stage)
          // Instruction Memory containing program defined by m4_asm(...) instantiations.
          //_@1
             /*SV_plus*/
                // The program in an instruction memory.
-               wire [31:0] instrs [0:10-1];
-               assign instrs[0] = {7'b0000000, 5'd0, 5'd0, 3'b000, 5'd10, 7'b0110011}; 
-               assign instrs[1] = {7'b0000000, 5'd0, 5'd10, 3'b000, 5'd14, 7'b0110011}; 
-               assign instrs[2] = {12'b1010, 5'd10, 3'b000, 5'd12, 7'b0010011}; 
-               assign instrs[3] = {7'b0000000, 5'd0, 5'd10, 3'b000, 5'd13, 7'b0110011}; 
-               assign instrs[4] = {7'b0000000, 5'd14, 5'd13, 3'b000, 5'd14, 7'b0110011}; 
-               assign instrs[5] = {12'b1, 5'd13, 3'b000, 5'd13, 7'b0010011}; 
-               assign instrs[6] = {1'b1, 6'b111111, 5'd12, 5'd13, 3'b100, 4'b1100, 1'b1, 7'b1100011}; 
-               assign instrs[7] = {7'b0000000, 5'd0, 5'd14, 3'b000, 5'd10, 7'b0110011}; 
-               assign instrs[8] = {7'b0000000, 5'd10, 5'd0, 3'b010, 5'b10000, 7'b0100011}; 
-               assign instrs[9] = {12'b10000, 5'd0, 3'b010, 5'd17, 7'b0000011}; 
+               wire [31:0] instrs [0:12-1];
+               assign instrs[0] = {7'b0000000, 5'd0, 5'd0, 3'b000, 5'd14, 7'b0110011}; 
+               assign instrs[1] = {12'b101100, 5'd0, 3'b000, 5'd12, 7'b0010011}; 
+               assign instrs[2] = {7'b0000000, 5'd0, 5'd0, 3'b000, 5'd13, 7'b0110011}; 
+               assign instrs[3] = {7'b0000000, 5'd14, 5'd13, 3'b000, 5'd14, 7'b0110011}; 
+               assign instrs[4] = {12'b1, 5'd13, 3'b000, 5'd13, 7'b0010011}; 
+               assign instrs[5] = {1'b1, 6'b111111, 5'd12, 5'd13, 3'b100, 4'b1100, 1'b1, 7'b1100011}; 
+               assign instrs[6] = {12'b111111111111, 5'd13, 3'b000, 5'd13, 7'b0010011}; 
+               assign instrs[7] = {7'b0100000, 5'd13, 5'd14, 3'b000, 5'd14, 7'b0110011}; 
+               assign instrs[8] = {1'b1, 6'b111111, 5'd13, 5'd0, 3'b100, 4'b1100, 1'b1, 7'b1100011}; 
+               assign instrs[9] = {7'b0000000, 5'd0, 5'd0, 3'b000, 5'd0, 7'b0110011}; 
+               assign instrs[10] = {7'b0000000, 5'd0, 5'd0, 3'b000, 5'd0, 7'b0110011}; 
+               assign instrs[11] = {1'b1, 6'b111110, 5'd12, 5'd0, 3'b100, 4'b1010, 1'b1, 7'b1100011}; 
                  
-            for (imem = 0; imem <= 9; imem=imem+1) begin : L1_CPU_Imem //_/imem
+            for (imem = 0; imem <= 11; imem=imem+1) begin : L1_CPU_Imem //_/imem
                assign CPU_Imem_instr_a1[imem][31:0] = instrs[imem];
             end
             //_?$imem_rd_en
-               assign CPU_imem_rd_data_a1[31:0] = CPU_Imem_instr_a1[CPU_imem_rd_addr_a1];
+               assign CPU_imem_rd_data_a1[31:0] = CPU_imem_rd_addr_a1 < 4'd12 ? CPU_Imem_instr_a1[CPU_imem_rd_addr_a1] : 32'b0;
           
       //_\end_source    // Args: (read stage)
-      //_\source /raw.githubusercontent.com/shivanishah269/riscvcore/master/FPGAImplementation/riscvshelllib.tlv 31   // Instantiated from mythcore_test.tlv, 249 as: m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      //_\source /raw.githubusercontent.com/shivanishah269/riscvcore/master/FPGAImplementation/riscvshelllib.tlv 31   // Instantiated from mythcore_test.tlv, 250 as: m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
          // Reg File
          //_@3
             for (xreg = 0; xreg <= 31; xreg=xreg+1) begin : L1_CPU_Xreg //_/xreg
@@ -290,7 +293,7 @@ generate //_\TLV
                assign CPU_rf_rd_data2_a2[31:0] = CPU_Xreg_value_a4[CPU_rf_rd_index2_a2];
             `BOGUS_USE(CPU_rf_rd_data1_a2 CPU_rf_rd_data2_a2) 
       //_\end_source  // Args: (read stage, write stage) - if equal, no register bypass is required
-      //_\source /raw.githubusercontent.com/shivanishah269/riscvcore/master/FPGAImplementation/riscvshelllib.tlv 48   // Instantiated from mythcore_test.tlv, 250 as: m4+dmem(@4)    // Args: (read/write stage)
+      //_\source /raw.githubusercontent.com/shivanishah269/riscvcore/master/FPGAImplementation/riscvshelllib.tlv 48   // Instantiated from mythcore_test.tlv, 251 as: m4+dmem(@4)    // Args: (read/write stage)
          // Data Memory
          //_@4
             for (dmem = 0; dmem <= 15; dmem=dmem+1) begin : L1_CPU_Dmem //_/dmem
