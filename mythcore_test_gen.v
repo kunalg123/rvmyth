@@ -405,7 +405,7 @@ wire [31:0] CPU_Dmem_value_a4 [15:0];
 reg  [31:0] CPU_Dmem_value_a5 [15:0];
 
 // For |cpu/imem$instr.
-wire [31:0] CPU_Imem_instr_a1 [9:0];
+wire [31:0] CPU_Imem_instr_a1 [11:0];
 
 // For |cpu/xreg$value.
 wire [31:0] CPU_Xreg_value_a3 [31:0];
