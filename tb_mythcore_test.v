@@ -19,7 +19,7 @@ module tb_mythcore_test;
         reset = 0;
         #2 reset = 1;
 	#10 reset = 0;
-        #200 $finish;
+        #2000 $finish;
         end
         always #1 clk = ~clk;
 
