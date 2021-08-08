@@ -44,7 +44,7 @@ generate //_\TLV
       //Fetch
          // Next PC
          assign CPU_pc_a0[31:0] = (CPU_reset_a1) ? 32'b0 : 
-                     (CPU_taken_br_a3) ? CPU_br_tgt_pc_a3 : 
+                     (CPU_valid_taken_br_a3) ? CPU_br_tgt_pc_a3 : 
                      (CPU_valid_load_a3) ? CPU_inc_pc_a3 : 
                      (CPU_valid_jump_a3 && CPU_is_jal_a3) ? CPU_br_tgt_pc_a3 :
                      (CPU_valid_jump_a3 && CPU_is_jalr_a3) ? CPU_jalr_tgt_pc_a3 : CPU_inc_pc_a1;
